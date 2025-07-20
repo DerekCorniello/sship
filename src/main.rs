@@ -1,12 +1,21 @@
 mod service;
-use service::{send, receive, discover, cli};
 use clap::Parser;
+use env_logger::Builder;
+use log::LevelFilter;
+use service::{cli, discover, receive, send};
 
 pub fn main() {
     let args = cli::Cli::parse();
+    Builder::new()
+        .filter_level(if args.verbose {
+            LevelFilter::Info
+        } else {
+            LevelFilter::Warn
+        })
+        .init();
     match args.cmd {
         cli::Command::Discover(_) => {
-            discover::run();
+            discover::run(args);
         }
         cli::Command::Receive(_) => {
             receive::run(args);

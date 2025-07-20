@@ -1,11 +1,12 @@
 use crate::cli::{Cli, Command};
+use log::{error, debug};
 pub fn run(args: Cli) {
     match args.cmd {
         Command::Discover(args) => {
 
         }
         _ => {
-            println!("Fatal error, should not be getting anything other than the discover command here.");
+            error!("Fatal error, should not be getting anything other than the discover command here.");
         }
     }
 }

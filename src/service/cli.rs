@@ -3,6 +3,9 @@ use clap::{Parser, Subcommand, Args};
 #[derive(Parser, Debug)]
 #[command(name = "sship", about = "Secure P2P file transfers over SSH")]
 pub struct Cli {
+    #[arg(short, long, global = true)]
+    pub verbose: bool,
+
     #[command(subcommand)]
     pub cmd: Command,
 }
@@ -17,9 +20,6 @@ pub enum Command {
 #[derive(Args, Debug)]
 pub struct SendArgs {
     pub path: String,
-
-    #[arg(short, long)]
-    pub verbose: bool,
 }
 
 #[derive(Args, Debug)]
@@ -28,13 +28,7 @@ pub struct ReceiveArgs {
 
     #[arg(short, long)]
     pub rename: Option<String>,
-
-    #[arg(short, long)]
-    pub verbose: bool,
 }
 
 #[derive(Args, Debug)]
-pub struct DiscoverArgs {
-    #[arg(short, long)]
-    pub verbose: bool,
-}
+pub struct DiscoverArgs {}

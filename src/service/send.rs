@@ -1,5 +1,6 @@
 use crate::cli::{Cli, Command};
 use std::fs;
+use log::{error, debug};
 
 pub fn run(args: Cli) {
     match args.cmd {
@@ -9,21 +10,19 @@ pub fn run(args: Cli) {
                 Ok(meta) if meta.is_file() => false,
                 Ok(meta) if meta.is_dir() => true,
                 Ok(meta) => {
-                    eprintln!("Unsupported file type: '{:?}'", meta.file_type());
+                    error!("Unsupported file type: '{:?}'", meta.file_type());
                     return;
                 }
                 Err(e) => {
-                    eprintln!("Error accessing '{}': {}", path, e);
+                    error!("Error accessing '{}': {}", path, e);
                     return;
                 }
             };
 
-            if args.verbose {
-                println!("[send] '{}' is a {}", path, if is_dir { "directory" } else { "file" });
-            }
+                debug!("[send] '{}' is a {}", path, if is_dir { "directory" } else { "file" });
         }
         _ => {
-            println!("Fatal error, should not be getting anything other than the send command here.");
+            error!("Fatal error, should not be getting anything other than the send command here.");
         }
     }
 }
