@@ -1,4 +1,5 @@
 mod service;
+mod util;
 use clap::Parser;
 use env_logger::Builder;
 use log::LevelFilter;
@@ -8,7 +9,7 @@ pub fn main() {
     let args = cli::Cli::parse();
     Builder::new()
         .filter_level(if args.verbose {
-            LevelFilter::Info
+            LevelFilter::Debug
         } else {
             LevelFilter::Warn
         })

@@ -1,6 +1,7 @@
 use crate::cli::{Cli, Command};
+use crate::util::codegen::generate;
+use log::{debug, error};
 use std::fs;
-use log::{error, debug};
 
 pub fn run(args: Cli) {
     match args.cmd {
@@ -19,11 +20,17 @@ pub fn run(args: Cli) {
                 }
             };
 
-                debug!("[send] '{}' is a {}", path, if is_dir { "directory" } else { "file" });
+            debug!(
+                "[send] '{}' is a {}",
+                path,
+                if is_dir { "directory" } else { "file" }
+            );
+
+            let pairing_code = generate();
+            debug!("[send] generated code {}", pairing_code);
         }
         _ => {
             error!("Fatal error, should not be getting anything other than the send command here.");
         }
     }
 }
-
