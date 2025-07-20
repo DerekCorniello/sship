@@ -3,15 +3,15 @@ use service::{send, receive, discover, cli};
 use clap::Parser;
 
 pub fn main() {
-    let args = cli::Args::parse();
+    let args = cli::Cli::parse();
     match args.cmd {
-        cli::Commands::Discover => {
+        cli::Command::Discover(_) => {
             discover::run();
         }
-        cli::Commands::Receive => {
+        cli::Command::Receive(_) => {
             receive::run(args);
         }
-        cli::Commands::Send => {
+        cli::Command::Send(_) => {
             send::run(args);
         }
     }
