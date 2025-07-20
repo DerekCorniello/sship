@@ -14,7 +14,9 @@ To create a cross-platform, peer-to-peer file transfer tool that:
 * Requires **zero manual SSH config**
 * Makes it **as easy to send a file as `sship send file.png`**
 * Works over **LAN**
-* Has reliable, production-level behaviors (resumable transfers, hashing, etc.)
+* Implements **resumable transfers** with optional sliding window protocol
+* Uses **strong hashing** to ensure data integrity
+* Allows for **minimal friction** while showing off real systems design & networking skill
 
 ---
 
@@ -24,12 +26,13 @@ To create a cross-platform, peer-to-peer file transfer tool that:
 * Send a file to a friend on the same **Wi-Fi network**
 * Share a file securely with no need to trust the cloud
 * Resume a large transfer after a network drop
+* Showcase real-world protocol behavior without reinventing SSH
 
 ---
 
 ## ✅ MVP (Minimum Viable Product)
 
-> Goal: get a functional prototype that securely transfers files P2P over SSH using code-based pairing.
+> Goal: get a functional prototype that securely transfers files P2P over SSH using code-based pairing and resumability.
 
 * [ ] `sship send <file>` command starts SSH listener + prints connection info
 * [ ] `sship receive <code>` connects to sender and downloads file
@@ -37,7 +40,8 @@ To create a cross-platform, peer-to-peer file transfer tool that:
 * [ ] Ephemeral SSH key pair generation
 * [ ] Short code pairing (e.g., `349-112`)
 * [ ] SHA-256 file hashing for integrity check
-* [ ] Resumable file transfer support
+* [ ] Resumable file transfer with seek support
+* [ ] Basic sliding window logic for efficiency
 * [ ] Terminal progress bar
 * [ ] Cross-platform support
 
@@ -58,7 +62,20 @@ To create a cross-platform, peer-to-peer file transfer tool that:
 
 ---
 
-## 🧱 Stack & Architecture
+## 🧱 Protocol Design
+
+sship uses SSH for encryption and authentication, but layers a custom application-level protocol over it to:
+
+* Support resumable file transfers via file offset tracking
+* Use a basic **sliding window** (tunable for performance)
+* Periodically hash chunks and verify
+* Allow flexible transfer logic without modifying SSH internals
+
+This gives the best of both worlds: simplicity and security from SSH, with a sprinkle of Gippity-style protocol nerdery.
+
+---
+
+## 🧺 Stack & Architecture
 
 | Piece        | Tech/Crate       |
 | ------------ | ---------------- |
@@ -67,6 +84,7 @@ To create a cross-platform, peer-to-peer file transfer tool that:
 | CLI Parsing  | `clap`           |
 | Progress Bar | `indicatif`      |
 | Hashing      | `sha2`, `digest` |
+| Resume Logic | `seek`           |
 
 ---
 
@@ -96,4 +114,4 @@ sship is opinionated:
 * No guessing what it's doing.
 * No nonsense.
 
-Just a clean CLI that speaks SSH and stays out of your way.
+Just a clean CLI that speaks SSH and stays out of your way - while showing off real protocol design under the hood.
