@@ -1,0 +1,72 @@
+stateDiagram-v2
+    [*] --> WaitingHandshake
+    
+    WaitingHandshake --> ValidatingPairing : Receive 0x0 Handshake Init
+    
+    ValidatingPairing --> WaitingMetadata : Send 0x1 Ack (accept=true)
+    ValidatingPairing --> Rejected : Send 0x1 Ack (accept=false)
+    
+    WaitingMetadata --> ReceivingData : Receive 0xC Metadata
+    WaitingMetadata --> InitiateResume : Check for existing partial file
+    
+    InitiateResume --> ReceivingData : Send 0x5 Request Resume
+    InitiateResume --> ReceivingData : Receive 0x6 Resume Ack (accept=true)
+    InitiateResume --> WaitingMetadata : Receive 0x6 Resume Ack (accept=false)
+    
+    ReceivingData --> ReceivingData : Receive 0x2 Send Data + Save progress
+    ReceivingData --> VerifyingHash : Receive 0x7 Hash Check
+    ReceivingData --> ReceivingData : Send 0x3 Ack Data
+    ReceivingData --> ReceivingData : Send 0x4 Request Data (missing chunks)
+    ReceivingData --> Error : Write failure / disk full
+    ReceivingData --> Cancelled : Send 0xE Cancel
+    
+    VerifyingHash --> Complete : Hash matches → Send 0x8 Hash Ack (match=true)
+    VerifyingHash --> ReceivingData : Hash fails → Send 0x8 Hash Ack (match=false)
+    VerifyingHash --> VerifyingHash : Receive 0x2 Send Data (continue while verifying)
+    VerifyingHash --> Error : Verification error
+    VerifyingHash --> Cancelled : Send 0xE Cancel
+    
+    Complete --> [*] : Receive 0xD Transfer Complete
+    
+    Error --> [*] : Send 0x9 Error
+    Rejected --> [*]
+    Cancelled --> [*]
+    
+    %% Handle ping/pong in any active state  
+    WaitingHandshake --> WaitingHandshake : Receive 0xA Ping / Send 0xB Pong
+    WaitingMetadata --> WaitingMetadata : Receive 0xA Ping / Send 0xB Pong
+    ReceivingData --> ReceivingData : Receive 0xA Ping / Send 0xB Pong
+    VerifyingHash --> VerifyingHash : Receive 0xA Ping / Send 0xB Pong
+    
+    note right of ValidatingPairing
+        - Check pairing code
+        - User approval (GUI/CLI)
+        - Validate file path
+        - Check disk space
+    end note
+    
+    note right of ReceivingData
+        Tracks & Persists:
+        - Received chunks (bitmap)
+        - Missing ranges
+        - Write buffer
+        - Progress percentage
+        - File metadata
+        - Pairing code
+        - Transfer session ID
+    end note
+    
+    note right of VerifyingHash
+        - Hash received chunks
+        - Can pipeline with
+          continued data receipt
+        - Request retransmission
+          if hash fails
+    end note
+    
+    note right of InitiateResume
+        - Check existing file
+        - Validate partial hash
+        - Calculate resume offset
+        - Clean up incomplete chunks
+    end note

@@ -1,0 +1,59 @@
+stateDiagram-v2
+    [*] --> Init
+    
+    Init --> WaitingHandshake : Send 0x0 Handshake Init
+    
+    WaitingHandshake --> SendingMetadata : Receive 0x1 Ack (accept=true)
+    WaitingHandshake --> Error : Receive 0x1 Ack (accept=false)
+    WaitingHandshake --> Error : Timeout
+    
+    SendingMetadata --> SendingData : Send 0xC Metadata + Save session state
+    
+    SendingData --> SendingData : Send 0x2 Send Data + Update progress
+    SendingData --> WaitingHashAck : Send 0x7 Hash Check
+    SendingData --> HandleResume : Receive 0x5 Request Resume
+    SendingData --> SendingData : Receive 0x4 Request Data
+    SendingData --> Error : Receive 0x9 Error
+    SendingData --> Cancelled : Receive 0xE Cancel
+    
+    WaitingHashAck --> Complete : Receive 0x8 Hash Ack (match=true)
+    WaitingHashAck --> SendingData : Receive 0x8 Hash Ack (match=false)
+    WaitingHashAck --> HandleResume : Receive 0x5 Request Resume
+    WaitingHashAck --> Error : Receive 0x9 Error
+    WaitingHashAck --> Cancelled : Receive 0xE Cancel
+    
+    HandleResume --> SendingData : Send 0x6 Resume Ack (accept=true)
+    HandleResume --> Error : Send 0x6 Resume Ack (accept=false)
+    
+    Complete --> [*] : Send 0xD Transfer Complete
+    
+    Error --> [*] : Send 0x9 Error (optional)
+    Cancelled --> [*]
+    
+    %% Handle ping/pong in any state
+    SendingData --> SendingData : Receive 0xA Ping / Send 0xB Pong
+    WaitingHandshake --> WaitingHandshake : Receive 0xA Ping / Send 0xB Pong
+    WaitingHashAck --> WaitingHashAck : Receive 0xA Ping / Send 0xB Pong
+    
+    note right of SendingData
+        Tracks & Persists:
+        - Current offset
+        - Pending chunks  
+        - Ack'd offset
+        - Chunk size
+        - File metadata
+        - Pairing code
+        - Transfer session ID
+    end note
+    
+    note right of WaitingHashAck
+        May continue sending
+        data while waiting
+        for hash verification
+    end note
+    
+    note right of HandleResume
+        Validates resume offset
+        against current progress
+        Updates internal state
+    end note
